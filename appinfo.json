@@ -13,27 +13,32 @@
   },
   "resources": {
     "media": [
-        {
+      {
         "type": "font",
         "name": "FONT_IMAGINE_43",
         "file": "fonts/imagine.ttf"
-        },
-        {
+      },
+      {
         "type": "font",
         "name": "FONT_IMAGINE_25",
         "file": "fonts/imagine.ttf"
-        },
-        {
+      },
+      {
         "type": "font",
         "name": "FONT_IMAGINE_20",
         "file": "fonts/imagine.ttf"
-        },
-        {
+      },
+      {
         "type": "png",
         "name": "IMAGE_MENU_ICON",
         "file": "images/menu_icon.png",
         "menuIcon": true
-        }
+      }
     ]
-  }
+  },
+  "targetPlatforms": [
+    "aplite",
+    "basalt"
+  ],
+  "sdkVersion": "3"
 }
