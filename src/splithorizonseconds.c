@@ -8,7 +8,7 @@ static TextLayer *lower_layer, *time_layer, *am_pm_layer, *day_layer, *date_laye
 static InverterLayer *top_shade, *bottom_shade, *q1_shade, *q2_shade, *q3_shade, *q4_shade;
 
 //State
-static bool q1_down = false, q2_down = false, q3_down = false, q4_down = false;
+static bool s_q_states[4];
 
 /******************************** Time functions **********************************/
 
@@ -18,9 +18,9 @@ static void set_time(struct tm *t) {
   int hours = t->tm_hour;
 
   //Time string - static keeps it around
-  static char hour_text[] = "00:00";
-  strftime(hour_text, sizeof(hour_text), clock_is_24h_style() ? "%H:%M" : "%I:%M", t);
-  text_layer_set_text(time_layer, hour_text);
+  static char s_hour_text[] = "00:00";
+  strftime(s_hour_text, sizeof(s_hour_text), clock_is_24h_style() ? "%H:%M" : "%I:%M", t);
+  text_layer_set_text(time_layer, s_hour_text);
   
   //AM/PM
   if(!clock_is_24h_style()) {
@@ -33,47 +33,47 @@ static void set_time(struct tm *t) {
   }
     
   //Day string
-  static char day_text[] = "Wed";
-  strftime(day_text, sizeof(day_text), "%a", t);
-  text_layer_set_text(day_layer, day_text);
+  static char s_day_text[] = "Wed";
+  strftime(s_day_text, sizeof(s_day_text), "%a", t);
+  text_layer_set_text(day_layer, s_day_text);
   
   //Date string
-  static char date_text[] = "xxxx";
-  strftime(date_text, sizeof(date_text), "%eth", t);
+  static char s_date_text[] = "xxxx";
+  strftime(s_date_text, sizeof(s_date_text), "%eth", t);
   if(day == 1 || day == 21 || day == 31) {  
     //1st, 21st, 31st
-    date_text[2] = 's';
-    date_text[3] = 't';
+    s_date_text[2] = 's';
+    s_date_text[3] = 't';
   } else if (day == 2 || day == 22) { 
     //2nd, 22nd
-    date_text[2] = 'n';
-    date_text[3] = 'd';
+    s_date_text[2] = 'n';
+    s_date_text[3] = 'd';
   } else if(day == 3 || day == 23) {  
     //3rd, 23rd
-    date_text[2] = 'r';
-    date_text[3] = 'd';
+    s_date_text[2] = 'r';
+    s_date_text[3] = 'd';
   }
-  text_layer_set_text(date_layer, date_text);
+  text_layer_set_text(date_layer, s_date_text);
 
   //Month string
-  static char month_text[] = "September";
-  strftime(month_text, sizeof(month_text), "%B", t);
-  text_layer_set_text(month_layer, month_text);
+  static char s_month_text[] = "September";
+  strftime(s_month_text, sizeof(s_month_text), "%B", t);
+  text_layer_set_text(month_layer, s_month_text);
   
   //Synchronise q markers
-  if(!q1_down && seconds >= 15) {
+  if(!s_q_states[0] && seconds >= 15) {
     animate_layer(inverter_layer_get_layer(q1_shade), GRect(0,0,35,0), GRect(0,0,35,10), 1000, 0);
-    q1_down = true;
+    s_q_states[0] = true;
   }
 
-  if(!q2_down && seconds >= 30) {
+  if(!s_q_states[1] && seconds >= 30) {
     animate_layer(inverter_layer_get_layer(q2_shade), GRect(36,0,35,0), GRect(36,0,35,10), 1000, 0);
-    q2_down = true;
+    s_q_states[1] = true;
   }
 
-  if(!q3_down && seconds >= 45) {
+  if(!s_q_states[2] && seconds >= 45) {
     animate_layer(inverter_layer_get_layer(q3_shade), GRect(72,0,35,0), GRect(72,0,35,10), 1000, 0);
-    q3_down = true;
+    s_q_states[2] = true;
   }
 }
 
@@ -97,26 +97,26 @@ static void tick_handler(struct tm *t, TimeUnits units_changed) {
       animate_layer(inverter_layer_get_layer(q2_shade), GRect(36,0,35,10), GRect(36,0,35,0), 300, 0);
       animate_layer(inverter_layer_get_layer(q3_shade), GRect(72,0,35,10), GRect(72,0,35,0), 300, 0);
       animate_layer(inverter_layer_get_layer(q4_shade), GRect(108,0,35,10), GRect(108,0,35,0), 300, 0);
-      q1_down = false; 
-      q2_down = false; 
-      q3_down = false; 
-      q4_down = false;
+      s_q_states[0] = false; 
+      s_q_states[1] = false; 
+      s_q_states[2] = false; 
+      s_q_states[3] = false;
       break;
     case 15: 
       animate_layer(inverter_layer_get_layer(q1_shade), GRect(0,0,35,0), GRect(0,0,35,10), 1000, 0);
-      q1_down = true;
+      s_q_states[0] = true;
       break;
     case 30:
       animate_layer(inverter_layer_get_layer(q2_shade), GRect(36,0,35,0), GRect(36,0,35,10), 1000, 0);
-      q2_down = true;
+      s_q_states[1] = true;
       break;
     case 45:
       animate_layer(inverter_layer_get_layer(q3_shade), GRect(72,0,35,0), GRect(72,0,35,10), 1000, 0);
-      q3_down = true;
+      s_q_states[2] = true;
       break;
     case 59: 
       animate_layer(inverter_layer_get_layer(q4_shade), GRect(108,0,35,0), GRect(108,0,35,10), 1000, 0);
-      q4_down = true;  
+      s_q_states[3] = true;  
       
       //Animate shades in
       animate_layer(inverter_layer_get_layer(top_shade), GRect(0,0,144,0), GRect(0,0,144,84), 400, 0);
