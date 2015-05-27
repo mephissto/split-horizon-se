@@ -1,5 +1,5 @@
-#ifdef PBL_PLATFORM_BASALT
 #include "InverterLayerCompat.h"
+#ifdef PBL_SDK_3
 
 static GColor s_fg_color, s_bg_color;
 
@@ -60,6 +60,32 @@ void inverter_layer_compat_destroy(InverterLayerCompat *this) {
 
 Layer* inverter_layer_compat_get_layer(InverterLayerCompat *this) {
   return this->layer;
+}
+
+Layer* inverter_layer_compat_func_get(InverterLayerCompat *layer) {
+  return inverter_layer_compat_get_layer(layer); 
+}
+
+InverterLayerCompat* inverter_layer_compat_func_create(GRect frame) {
+  return inverter_layer_compat_create(frame); 
+}
+
+void inverter_layer_compat_func_destroy(InverterLayerCompat* layer) {
+  inverter_layer_compat_destroy(layer); 
+}
+
+#elif PBL_SDK_2
+
+Layer* inverter_layer_compat_func_get(InverterLayer *layer) {
+  return inverter_layer_get_layer(layer); 
+}
+
+InverterLayer* inverter_layer_compat_func_create(GRect frame) {
+  return inverter_layer_create(frame); 
+}
+
+void inverter_layer_compat_func_destroy(InverterLayer* layer) {
+  inverter_layer_destroy(layer); 
 }
 
 #endif

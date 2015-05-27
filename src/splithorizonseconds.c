@@ -1,27 +1,21 @@
 #include <pebble.h>
 
-#include "util.h"
+#include "util/util.h"
+#include "compat/InverterLayerCompat.h"
 
 //Elements
 static Window *s_main_window;
 static TextLayer *lower_layer, *time_layer, *am_pm_layer, *day_layer, *date_layer, *month_layer;
+#ifdef PBL_SDK_2
+static InverterLayer *top_shade, *bottom_shade, *q1_shade, *q2_shade, *q3_shade, *q4_shade;
+#elif PBL_SDK_3
+static InverterLayerCompat *top_shade, *bottom_shade, *q1_shade, *q2_shade, *q3_shade, *q4_shade;
+#endif
 
 //State
 static bool s_q_states[4];
 
-// Compat
-#ifdef PBL_SDK_2
-static InverterLayer *top_shade, *bottom_shade, *q1_shade, *q2_shade, *q3_shade, *q4_shade;
-static Layer* get_inv_layer(InverterLayer *layer) { return inverter_layer_get_layer(layer); }
-static InverterLayer* create_inv_layer(GRect frame) { return inverter_layer_create(frame); }
-static void destroy_inv_layer(InverterLayer* layer) { inverter_layer_destroy(layer); }
-#elif PBL_SDK_3
-#include "shim/InverterLayerCompat.h"
-static InverterLayerCompat *top_shade, *bottom_shade, *q1_shade, *q2_shade, *q3_shade, *q4_shade;
-static Layer* get_inv_layer(InverterLayerCompat *layer) { return inverter_layer_compat_get_layer(layer); }
-static InverterLayerCompat* create_inv_layer(GRect frame) { return inverter_layer_compat_create(frame); }
-static void destroy_inv_layer(InverterLayerCompat* layer) { inverter_layer_compat_destroy(layer); }
-#endif
+static GColor fg_color, bg_color;
 
 /******************************** Time functions **********************************/
 
@@ -75,17 +69,17 @@ static void set_time(struct tm *t) {
   
   //Synchronise q markers
   if(!s_q_states[0] && seconds >= 15) {
-    util_animate_layer(get_inv_layer(q1_shade), GRect(0,0,35,0), GRect(0,0,35,10), 1000, 0);
+    util_animate_layer(inverter_layer_compat_func_get(q1_shade), GRect(0,0,35,0), GRect(0,0,35,10), 1000, 0);
     s_q_states[0] = true;
   }
 
   if(!s_q_states[1] && seconds >= 30) {
-    util_animate_layer(get_inv_layer(q2_shade), GRect(36,0,35,0), GRect(36,0,35,10), 1000, 0);
+    util_animate_layer(inverter_layer_compat_func_get(q2_shade), GRect(36,0,35,0), GRect(36,0,35,10), 1000, 0);
     s_q_states[1] = true;
   }
 
   if(!s_q_states[2] && seconds >= 45) {
-    util_animate_layer(get_inv_layer(q3_shade), GRect(72,0,35,0), GRect(72,0,35,10), 1000, 0);
+    util_animate_layer(inverter_layer_compat_func_get(q3_shade), GRect(72,0,35,0), GRect(72,0,35,10), 1000, 0);
     s_q_states[2] = true;
   }
 }
@@ -102,38 +96,38 @@ static void tick_handler(struct tm *t, TimeUnits units_changed) {
       break;
     case 1:
       //Animate shades out
-      util_animate_layer(get_inv_layer(top_shade), GRect(0,0,144,84), GRect(0,0,144,0), 400, 0);
-      util_animate_layer(get_inv_layer(bottom_shade), GRect(0,84,144,84), GRect(0,168,144,0), 400, 0);
+      util_animate_layer(inverter_layer_compat_func_get(top_shade), GRect(0,0,144,84), GRect(0,0,144,0), 400, 0);
+      util_animate_layer(inverter_layer_compat_func_get(bottom_shade), GRect(0,84,144,84), GRect(0,168,144,0), 400, 0);
       
       //Retract q markers
-      util_animate_layer(get_inv_layer(q1_shade), GRect(0,0,35,10), GRect(0,0,35,0), 300, 0);
-      util_animate_layer(get_inv_layer(q2_shade), GRect(36,0,35,10), GRect(36,0,35,0), 300, 0);
-      util_animate_layer(get_inv_layer(q3_shade), GRect(72,0,35,10), GRect(72,0,35,0), 300, 0);
-      util_animate_layer(get_inv_layer(q4_shade), GRect(108,0,35,10), GRect(108,0,35,0), 300, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q1_shade), GRect(0,0,35,10), GRect(0,0,35,0), 300, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q2_shade), GRect(36,0,35,10), GRect(36,0,35,0), 300, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q3_shade), GRect(72,0,35,10), GRect(72,0,35,0), 300, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q4_shade), GRect(108,0,35,10), GRect(108,0,35,0), 300, 0);
       s_q_states[0] = false; 
       s_q_states[1] = false; 
       s_q_states[2] = false; 
       s_q_states[3] = false;
       break;
     case 15: 
-      util_animate_layer(get_inv_layer(q1_shade), GRect(0,0,35,0), GRect(0,0,35,10), 1000, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q1_shade), GRect(0,0,35,0), GRect(0,0,35,10), 1000, 0);
       s_q_states[0] = true;
       break;
     case 30:
-      util_animate_layer(get_inv_layer(q2_shade), GRect(36,0,35,0), GRect(36,0,35,10), 1000, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q2_shade), GRect(36,0,35,0), GRect(36,0,35,10), 1000, 0);
       s_q_states[1] = true;
       break;
     case 45:
-      util_animate_layer(get_inv_layer(q3_shade), GRect(72,0,35,0), GRect(72,0,35,10), 1000, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q3_shade), GRect(72,0,35,0), GRect(72,0,35,10), 1000, 0);
       s_q_states[2] = true;
       break;
     case 59: 
-      util_animate_layer(get_inv_layer(q4_shade), GRect(108,0,35,0), GRect(108,0,35,10), 1000, 0);
+      util_animate_layer(inverter_layer_compat_func_get(q4_shade), GRect(108,0,35,0), GRect(108,0,35,10), 1000, 0);
       s_q_states[3] = true;  
       
       //Animate shades in
-      util_animate_layer(get_inv_layer(top_shade), GRect(0,0,144,0), GRect(0,0,144,84), 400, 0);
-      util_animate_layer(get_inv_layer(bottom_shade), GRect(0,168,144,0), GRect(0,84,144,84), 400, 0);
+      util_animate_layer(inverter_layer_compat_func_get(top_shade), GRect(0,0,144,0), GRect(0,0,144,84), 400, 0);
+      util_animate_layer(inverter_layer_compat_func_get(bottom_shade), GRect(0,168,144,0), GRect(0,84,144,84), 400, 0);
       break;
   }
 }
@@ -148,46 +142,46 @@ static void main_window_load(Window *window) {
 
   //Bottom frame
   lower_layer = text_layer_create(GRect(0, 84, 144, 84));
-  text_layer_set_background_color(lower_layer, GColorBlack);
+  text_layer_set_background_color(lower_layer, fg_color);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(lower_layer));
 
   //TextLayers
-  time_layer = util_init_text_layer(GRect(1, 41, 150, 50), GColorBlack, GColorClear, font_43, GTextAlignmentLeft);
+  time_layer = util_init_text_layer(GRect(1, 41, 150, 50), fg_color, GColorClear, font_43, GTextAlignmentLeft);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
 
-  am_pm_layer = util_init_text_layer(GRect(0, 0, 0, 0), GColorBlack, GColorClear, font_20, GTextAlignmentLeft);
+  am_pm_layer = util_init_text_layer(GRect(0, 0, 0, 0), fg_color, GColorClear, font_20, GTextAlignmentLeft);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(am_pm_layer));
 
-  day_layer = util_init_text_layer(GRect(1, 75, 150, 50), GColorWhite, GColorClear, font_25, GTextAlignmentLeft);
+  day_layer = util_init_text_layer(GRect(1, 75, 150, 50), bg_color, GColorClear, font_25, GTextAlignmentLeft);
   text_layer_set_text(day_layer, "MON");
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
 
-  date_layer = util_init_text_layer(GRect(70, 75, 150, 50), GColorWhite, GColorClear, font_25, GTextAlignmentLeft);
+  date_layer = util_init_text_layer(GRect(70, 75, 150, 50), bg_color, GColorClear, font_25, GTextAlignmentLeft);
   text_layer_set_text(date_layer, "25");
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
 
-  month_layer = util_init_text_layer(GRect(1, 95, 150, 50), GColorWhite, GColorClear, font_20, GTextAlignmentLeft);
+  month_layer = util_init_text_layer(GRect(1, 95, 150, 50), bg_color, GColorClear, font_20, GTextAlignmentLeft);
   text_layer_set_text(month_layer, "JANUARY");
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(month_layer));
 
   //InverterLayers
-  top_shade = create_inv_layer(GRect(0, 0, 144, 0));
-  layer_add_child(window_get_root_layer(window), get_inv_layer(top_shade));
+  top_shade = inverter_layer_compat_func_create(GRect(0, 0, 144, 0));
+  layer_add_child(window_get_root_layer(window), inverter_layer_compat_func_get(top_shade));
 
-  bottom_shade = create_inv_layer(GRect(0, 0, 144, 0));
-  layer_add_child(window_get_root_layer(window), get_inv_layer(bottom_shade));
+  bottom_shade = inverter_layer_compat_func_create(GRect(0, 0, 144, 0));
+  layer_add_child(window_get_root_layer(window), inverter_layer_compat_func_get(bottom_shade));
 
-  q1_shade = create_inv_layer(GRect(0, 0, 35, 0));
-  layer_add_child(window_get_root_layer(window), get_inv_layer(q1_shade));
+  q1_shade = inverter_layer_compat_func_create(GRect(0, 0, 35, 0));
+  layer_add_child(window_get_root_layer(window), inverter_layer_compat_func_get(q1_shade));
 
-  q2_shade = create_inv_layer(GRect(36, 0, 35, 0));
-  layer_add_child(window_get_root_layer(window), get_inv_layer(q2_shade));
+  q2_shade = inverter_layer_compat_func_create(GRect(36, 0, 35, 0));
+  layer_add_child(window_get_root_layer(window), inverter_layer_compat_func_get(q2_shade));
 
-  q3_shade = create_inv_layer(GRect(72, 0, 35, 0));
-  layer_add_child(window_get_root_layer(window), get_inv_layer(q3_shade));
+  q3_shade = inverter_layer_compat_func_create(GRect(72, 0, 35, 0));
+  layer_add_child(window_get_root_layer(window), inverter_layer_compat_func_get(q3_shade));
 
-  q4_shade = create_inv_layer(GRect(108, 0, 35, 0));
-  layer_add_child(window_get_root_layer(window), get_inv_layer(q4_shade));
+  q4_shade = inverter_layer_compat_func_create(GRect(108, 0, 35, 0));
+  layer_add_child(window_get_root_layer(window), inverter_layer_compat_func_get(q4_shade));
 
   //Init display not blank
   time_t temp = time(NULL);  
@@ -203,12 +197,12 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(date_layer);
   text_layer_destroy(month_layer);
 
-  destroy_inv_layer(top_shade);
-  destroy_inv_layer(bottom_shade);
-  destroy_inv_layer(q1_shade);
-  destroy_inv_layer(q2_shade);
-  destroy_inv_layer(q3_shade);
-  destroy_inv_layer(q4_shade);
+  inverter_layer_compat_func_destroy(top_shade);
+  inverter_layer_compat_func_destroy(bottom_shade);
+  inverter_layer_compat_func_destroy(q1_shade);
+  inverter_layer_compat_func_destroy(q2_shade);
+  inverter_layer_compat_func_destroy(q3_shade);
+  inverter_layer_compat_func_destroy(q4_shade);
 
   window_destroy(s_main_window);
 }
@@ -221,9 +215,11 @@ static void init() {
   };
   window_set_window_handlers(s_main_window, handlers);
 
- #ifdef PBL_SDK_3
-  inverter_layer_compat_set_colors(GColorWhite, GColorBlack);
- #endif
+  fg_color = COLOR_FALLBACK(GColorRed, GColorBlack);
+  bg_color = GColorWhite;
+#ifdef PBL_SDK_3
+  inverter_layer_compat_set_colors(bg_color, fg_color);
+#endif
 
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 
